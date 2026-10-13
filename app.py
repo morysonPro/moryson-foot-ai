@@ -2,8 +2,8 @@ import os, math, datetime as dt, requests, streamlit as st
 from zoneinfo import ZoneInfo
 st.set_page_config(page_title="MORYSON FOOT AI", page_icon="⚽", layout="wide")
 st.title("⚽ MORYSON FOOT AI — Tableau de bord privé")
-KEY = st.secrets["API_FOOTBALL_KEY"]
-PASSWORD = st.secrets["APP_PASSWORD"]
+KEY = st.secrets.get("API_FOOTBALL_KEY", "")
+PASSWORD = st.secrets.get("APP_PASSWORD", "")
 if not PASSWORD:
     st.error("Définir APP_PASSWORD dans les secrets de l'hébergeur."); st.stop()
 if not st.session_state.get("authenticated"):
@@ -71,7 +71,8 @@ try:
             h=avg_goals(hmatches,home["id"],"home")
             a=avg_goals(amatches,away["id"],"away")
             if len(h)<4 or len(a)<4:
-                results.append({"Heure":local.strftime("%H:%M"),"Compétition":f["league"]["name"],"Match":home["name"]+" – "+away["name"],"Données":"Insuffisantes","Top scores":"—","BTTS":"—","Over 2,5":"—","Confiance":"Faible"}); continue
+                results.append({"Heure":local.strftime("%H:%M"),"Compétition":f["league"]["name"],"Match":home["name"]+" – "+away["name"],"Données":"Insuffisantes","Top scores":"—","BTTS":"—","Over 2.5":"—"})
+                continue
             hf=sum(x[0] for x in h)/len(h); ha=sum(x[1] for x in h)/len(h)
             af=sum(x[0] for x in a)/len(a); aa=sum(x[1] for x in a)/len(a)
             # Regularized heuristic: avoids extreme forecasts, not calibrated to market.
@@ -79,9 +80,9 @@ try:
             lam_a=max(.25,min(3.5,.5*af+.5*ha))
             top,btts,over=forecast(lam_h,lam_a)
             scores=", ".join(f"{x}-{y} ({p:.1%})" for x,y,p in top)
-            results.append({"Heure":local.strftime("%H:%M"),"Compétition":f["league"]["name"],"Match":home["name"]+" – "+away["name"],"Données":f"{len(h)} dom. / {len(a)} ext.","Top scores":scores,"BTTS":f"{btts:.1%}","Over 2,5":f"{over:.1%}","Confiance":"Historique limité"})
+            results.append({"Heure":local.strftime("%H:%M"),"Compétition":f["league"]["name"],"Match":home["name"]+" – "+away["name"],"Données":f"{len(h)} dom. / {len(a)} ext.","Top scores":scores,"BTTS":f"{btts:.1%}","Over 2.5":f"{over:.1%}"})
         except Exception as ex:
-            results.append({"Heure":local.strftime("%H:%M"),"Compétition":f["league"]["name"],"Match":home["name"]+" – "+away["name"],"Données":"Erreur API","Top scores":"—","BTTS":"—","Over 2,5":"—","Confiance":"Indisponible"})
+            results.append({"Heure":local.strftime("%H:%M"),"Compétition":f["league"]["name"],"Match":home["name"]+" – "+away["name"],"Données":"Erreur API","Top scores":"—","BTTS":"—","Over 2.5":"—"})
     st.dataframe(results,use_container_width=True,hide_index=True)
     if results:
         import csv,io
@@ -91,4 +92,4 @@ except Exception as ex:
     st.error("Impossible de charger les matchs. Vérifier la clé API, le quota et la connexion.")
     st.code(str(ex))
 st.divider()
-st.caption("Prototype expérimental : modèle Poisson simplifié non calibré, sans blessures, compositions ni xG. Aucun score garanti. Les ligues peu documentées peuvent ne pas être analysables. Ne pas interpréter les probabilités comme des conseils de mise.")
+st.caption("Prototype expérimental : modèle Poisson simplifié non calibré, sans blessures, compositions ni xG. Aucun score garanti. Les ligues peu documentées peuvent ne pas être analysables.")
