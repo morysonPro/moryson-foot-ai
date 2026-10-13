@@ -2,8 +2,8 @@ import os, math, datetime as dt, requests, streamlit as st
 from zoneinfo import ZoneInfo
 st.set_page_config(page_title="MORYSON FOOT AI", page_icon="⚽", layout="wide")
 st.title("⚽ MORYSON FOOT AI — Tableau de bord privé")
-KEY=os.getenv("API_FOOTBALL_KEY","")
-PASSWORD=os.getenv("APP_PASSWORD","")
+KEY = st.secrets["API_FOOTBALL_KEY"]
+PASSWORD = st.secrets["APP_PASSWORD"]
 if not PASSWORD:
     st.error("Définir APP_PASSWORD dans les secrets de l'hébergeur."); st.stop()
 if not st.session_state.get("authenticated"):
